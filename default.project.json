@@ -4,7 +4,21 @@
     "$className": "DataModel",
 
     "ReplicatedStorage": {
-      "$path": "src/Replicated"
+      "Shared": {
+        "$path": "src/Shared"
+      },
+      "Assets": {
+        "$path": "src/Replicated/Assets"
+      },
+      "Animations": {
+        "$path": "src/Replicated/Animations"
+      },
+      "Remotes": {
+        "$path": "src/Replicated/Remotes"
+      },
+      "Sounds": {
+        "$path": "src/Replicated/Sounds"
+      }
     },
 
     "ServerScriptService": {

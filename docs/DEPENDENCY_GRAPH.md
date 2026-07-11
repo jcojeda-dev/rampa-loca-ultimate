@@ -10,34 +10,46 @@ El proyecto actual tiene un grafo de dependencias relativamente simple y limpio,
 Bootstrap.server.lua
   -> Shared.Core.Game
   -> Shared.Core.Logger
+  -> Shared.Core.ServiceContainer
+  -> Server/ServiceLoader.lua
 
 ServiceLoader.lua
+  -> Shared.Core.ServiceContainer
   -> Services/*
 
 Bootstrap.client.lua
   -> Shared.Core.Game
+  -> Shared.Core.ControllerContainer
+  -> client/ControllerLoader.lua
 
 Shared.Core.Game
-  -> Services registrados
-  -> Controllers registrados
+  -> Shared.Core.ServiceContainer
+  -> Shared.Core.ControllerContainer
+  -> Shared.Core.EventBus
+  -> Shared.Core.ResourceCleaner
+  -> Shared.Core.TaskScheduler
+  -> Shared.Core.RemoteRegistry
+
+Shared.Core.EventBus
+  -> Shared.Modules.Signal
+
+Shared.Core.RemoteRegistry
+  -> Shared.Utilities.Utilities
 
 Server.Services.DataService
   -> Shared.Config.ProfileTemplate
 
 Server.Services.RewardService
-  -> Shared.Config.GameConstants
-
-Server.Services.RemoteService
-  -> ReplicatedStorage.Remotes
+  -> Shared.Constants.GameConstants
 
 Shared.Config.*
   -> constantes y plantillas compartidas
 
 Shared.Modules.Promise
-  -> usado como módulo base de sincronización
+  -> módulo base de sincronización
 
 Shared.Modules.Signal
-  -> usado como módulo base de eventos
+  -> módulo base de eventos
 ```
 
 ## Dependencias externas

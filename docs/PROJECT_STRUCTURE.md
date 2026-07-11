@@ -28,19 +28,32 @@ src/
 
 ### src/client
 
-Contiene los scripts de arranque del cliente y la carpeta de controladores.
+Contiene los scripts de arranque del cliente, el cargador de controladores y la carpeta de controladores.
 
 ### src/Server
 
-Contiene el arranque del servidor, cargador de servicios y carpeta de servicios.
+Contiene el arranque del servidor, el cargador de servicios y la carpeta de servicios.
 
 ### src/Shared
 
-Contiene configuración, constantes, módulos reutilizables y núcleo del juego.
+Contiene configuración, constantes, módulos reutilizables, tipos, utilidades y núcleo del juego.
 
 ### src/Replicated
 
 Está destinada a recursos y remotes compartidos entre cliente y servidor.
+
+## Módulos core añadidos
+
+- Shared/Core/Game.lua: orquesta el arranque y el ciclo de vida del proyecto.
+- Shared/Core/ServiceContainer.lua: gestiona servicios con Init/Start/Destroy.
+- Shared/Core/ControllerContainer.lua: gestiona controladores con Init/Start/Destroy.
+- Shared/Core/EventBus.lua: centraliza eventos y suscriptores.
+- Shared/Core/ResourceCleaner.lua: gestiona limpieza de recursos.
+- Shared/Core/TaskScheduler.lua: gestiona tareas y timers.
+- Shared/Core/RemoteRegistry.lua: centraliza la creación de remotes.
+- Shared/Constants/GameConstants.lua: concentra constantes del juego.
+- Shared/Types/Types.lua: define tipos Luau reutilizables.
+- Shared/Utilities/Utilities.lua: aporta utilidades compartidas.
 
 ## Archivos principales
 

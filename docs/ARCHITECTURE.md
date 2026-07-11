@@ -58,10 +58,11 @@ Actualmente está preparada para extenderse con remotes y recursos replicados.
 
 ## Flujo de arranque
 
-1. El script cliente inicia el núcleo compartido.
-2. El script servidor inicia el núcleo compartido.
-3. El núcleo registra servicios y controladores.
-4. Cada módulo puede inicializarse con Init y arrancarse con Start.
+1. El script cliente inicializa el núcleo compartido.
+2. El script servidor inicializa el núcleo compartido.
+3. Los cargadores de servicios y controladores registran módulos en los contenedores correspondientes.
+4. El núcleo ejecuta Init, Start y Destroy en los módulos del ciclo de vida.
+5. El EventBus, el ResourceCleaner y el TaskScheduler centralizan eventos, limpieza y tareas repetitivas.
 
 ## Principios de diseño
 
