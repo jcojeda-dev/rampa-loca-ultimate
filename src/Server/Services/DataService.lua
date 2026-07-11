@@ -1,1 +1,83 @@
---!strictlocal DataStoreService=game:GetService("DataStoreService")local HttpService=game:GetService("HttpService")local Template=require(script.Parent.Parent.Parent.Shared.Config.ProfileTemplate)local Store=DataStoreService:GetDataStore("RLU_PROFILE_V1")local DataService={}DataService.__index=DataService-----------------------------------------------------local function DeepCopy(tbl)	local new={}	for k,v in pairs(tbl) do		if type(v)=="table" then			new[k]=DeepCopy(v)		else			new[k]=v		end	end	return newend-----------------------------------------------------function DataService:CreateProfile()	return DeepCopy(Template)end-----------------------------------------------------function DataService:Load(player)	local success,data=pcall(function()		return Store:GetAsync(player.UserId)	end)	if not success then		warn("Failed Loading "..player.Name)		return self:CreateProfile()	end	if data==nil then		data=self:CreateProfile()	end	data.LastLogin=os.time()	return dataend-----------------------------------------------------function DataService:Save(player,data)	local success,errorMessage=pcall(function()		Store:SetAsync(player.UserId,data)	end)	if not success then		warn(errorMessage)	endend-----------------------------------------------------return DataService
+--!strict
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local ProfileRepository = require(ReplicatedStorage.Shared.Domains.Player.ProfileRepository)
+local ProfileTemplate = require(ReplicatedStorage.Shared.Domains.Player.ProfileTemplate)
+local ProfileValidator = require(ReplicatedStorage.Shared.Domains.Player.ProfileValidator)
+local Logger = require(ReplicatedStorage.Shared.Core.Logger)
+local PlayerTypes = require(ReplicatedStorage.Shared.Domains.Player.PlayerTypes)
+
+local DataService = {}
+DataService.__index = DataService
+
+type DataServiceInstance = {
+	Name: string,
+	_repository: any,
+	_validator: any,
+	Init: (self: DataServiceInstance) -> (),
+	Start: (self: DataServiceInstance) -> (),
+	Destroy: (self: DataServiceInstance) -> (),
+	LoadProfile: (self: DataServiceInstance, userId: number) -> PlayerTypes.ProfileData?,
+	SaveProfile: (self: DataServiceInstance, profile: PlayerTypes.ProfileData) -> (boolean, string?),
+	CreateProfile: (self: DataServiceInstance, userId: number) -> PlayerTypes.ProfileData,
+}
+
+function DataService.new(): DataServiceInstance
+	local self = setmetatable({
+		Name = "DataService",
+		_repository = ProfileRepository.new(),
+		_validator = ProfileValidator.new(),
+	}, DataService)
+
+	return self
+end
+
+function DataService:Init(): ()
+	Logger:Info("Initializing DataService")
+end
+
+function DataService:Start(): ()
+	Logger:Info("Starting DataService")
+end
+
+function DataService:Destroy(): ()
+	Logger:Info("Destroying DataService")
+	self._repository:Destroy()
+end
+
+function DataService:LoadProfile(userId: number): PlayerTypes.ProfileData?
+	assert(type(userId) == "number" and userId > 0, "Invalid userId")
+
+	local profile = self._repository:Load(userId)
+	if profile == nil then
+		return nil
+	end
+
+	local isValid, errorMsg = self._validator:ValidateProfile(profile)
+	if not isValid then
+		Logger:Warn(`Failed to validate profile for user {userId}: {errorMsg}`)
+		profile = self._validator:Sanitize(profile)
+	end
+
+	return profile
+end
+
+function DataService:SaveProfile(profile: PlayerTypes.ProfileData): (boolean, string?)
+	assert(profile ~= nil, "Profile cannot be nil")
+
+	local isValid, errorMsg = self._validator:ValidateProfile(profile)
+	if not isValid then
+		Logger:Warn(`Profile validation failed: {errorMsg}`)
+		profile = self._validator:Sanitize(profile)
+	end
+
+	return self._repository:Save(profile)
+end
+
+function DataService:CreateProfile(userId: number): PlayerTypes.ProfileData
+	assert(type(userId) == "number" and userId > 0, "Invalid userId")
+	return ProfileTemplate.Create(userId)
+end
+
+return DataService
