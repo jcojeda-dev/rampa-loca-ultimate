@@ -1,0 +1,1 @@
+--!strictlocal Logger = {}Logger.Enabled = truelocal function write(prefix,...)	if not Logger.Enabled then		return	end	print(prefix,...)endfunction Logger:Info(...)	write("[INFO]",...)endfunction Logger:Warn(...)	write("[WARN]",...)endfunction Logger:Error(...)	warn("[ERROR]",...)endreturn Logger

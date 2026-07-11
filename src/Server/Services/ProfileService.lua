@@ -1,0 +1,1 @@
+--!strictlocal ProfileService = {}ProfileService.DefaultProfile = {Coins = 0,XP = 0,Level = 1,Rank = "Recruit",Kills = 0,Deaths = 0,Headshots = 0,Wins = 0,Losses = 0,Inventory = {},Loadout = {Primary = "Default",Secondary = "Pistol",Knife = "Knife"}}return ProfileService

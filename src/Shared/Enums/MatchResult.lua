@@ -1,0 +1,1 @@
+--!strictreturn table.freeze({    Red = "Red",    Blue = "Blue",    Draw = "Draw"})

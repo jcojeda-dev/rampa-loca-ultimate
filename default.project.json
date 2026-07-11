@@ -1,0 +1,36 @@
+{
+  "name": "RampaLocaUltimate",
+  "tree": {
+    "$className": "DataModel",
+
+    "ReplicatedStorage": {
+      "$path": "src/Replicated"
+    },
+
+    "ServerScriptService": {
+      "$path": "src/Server"
+    },
+
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "$path": "src/client"
+      }
+    },
+
+    "StarterGui": {
+      "$path": "src/UI"
+    },
+
+    "SoundService": {
+      "$path": "src/Sounds"
+    },
+
+    "Workspace": {
+      "$path": "src/Workspace"
+    },
+
+    "Lighting": {
+      "$path": "src/Lighting"
+    }
+  }
+}

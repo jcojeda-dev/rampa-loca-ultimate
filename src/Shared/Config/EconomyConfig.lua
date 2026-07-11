@@ -1,0 +1,1 @@
+--!strictlocal EconomyConfig = {}EconomyConfig.KillReward = 200EconomyConfig.HeadshotReward = 50EconomyConfig.AssistReward = 75EconomyConfig.ParticipationReward = 100EconomyConfig.Win1v1Reward = 500EconomyConfig.Win4v4Reward = 600EconomyConfig.LevelMultiplier = 1.15EconomyConfig.MaxCoins = 999999999return EconomyConfig

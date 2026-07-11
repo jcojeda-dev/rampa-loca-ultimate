@@ -1,0 +1,1 @@
+--!strictlocal MatchConfig = {}MatchConfig.MaxPlayers = 8MatchConfig.MinPlayers = 2MatchConfig.RoundTime = 300MatchConfig.WarmupTime = 15MatchConfig.Intermission = 10MatchConfig.RespawnTime = 1MatchConfig.GameModes = {FFA = {Players = 8},OneVsOne = {Players = 2},FourVsFour = {Players = 8,Teams = 2}}return MatchConfig

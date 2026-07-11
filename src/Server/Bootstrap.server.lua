@@ -1,0 +1,1 @@
+--!strictlocal ReplicatedStorage = game:GetService("ReplicatedStorage")local Game = require(ReplicatedStorage.Shared.Core.Game)local Logger = require(ReplicatedStorage.Shared.Core.Logger)Logger:Info("Bootstrapping Server...")Game:Start()

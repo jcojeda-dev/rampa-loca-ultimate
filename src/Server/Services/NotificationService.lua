@@ -1,0 +1,1 @@
+--!strictlocal NotificationService = {}NotificationService.__index = NotificationServicefunction NotificationService:Notify(player,title,message)	print(		"[NOTIFY]",		player.Name,		title,		message	)endreturn NotificationService

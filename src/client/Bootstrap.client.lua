@@ -1,0 +1,1 @@
+--!strictlocal ReplicatedStorage = game:GetService("ReplicatedStorage")local Game = require(ReplicatedStorage.Shared.Core.Game)Game:Start()

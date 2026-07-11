@@ -1,0 +1,35 @@
+# Rojo
+
+*.rbxl
+
+*.rbxlx
+
+*.rbxm
+
+*.rbxmx
+
+# VSCode
+
+.vscode/settings.json
+
+# Packages
+
+Packages
+
+# Wally
+
+wally.lock
+
+# Logs
+
+*.log
+
+# OS
+
+Thumbs.db
+
+.DS_Store
+
+# Temp
+
+*.tmp

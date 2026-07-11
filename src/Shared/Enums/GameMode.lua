@@ -1,0 +1,1 @@
+--!strictreturn table.freeze({    OneVsOne = "1v1",    FourVsFour = "4v4"})
