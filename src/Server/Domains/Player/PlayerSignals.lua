@@ -13,6 +13,10 @@ type SignalType = typeof(signalInstance)
 type PlayerSignalsInstance = {
 	ProfileLoaded: SignalType,
 	ProfileSaved: SignalType,
+	SessionCreated: SignalType,
+	SessionEnded: SignalType,
+	SessionLocked: SignalType,
+	SessionUnlocked: SignalType,
 	CoinsChanged: SignalType,
 	XPChanged: SignalType,
 	LevelChanged: SignalType,
@@ -24,6 +28,10 @@ function PlayerSignals.new(): PlayerSignalsInstance
 	local self = setmetatable({
 		ProfileLoaded = Signal.new(),
 		ProfileSaved = Signal.new(),
+		SessionCreated = Signal.new(),
+		SessionEnded = Signal.new(),
+		SessionLocked = Signal.new(),
+		SessionUnlocked = Signal.new(),
 		CoinsChanged = Signal.new(),
 		XPChanged = Signal.new(),
 		LevelChanged = Signal.new(),
@@ -36,6 +44,10 @@ end
 function PlayerSignals:Destroy(): ()
 	self.ProfileLoaded:Destroy()
 	self.ProfileSaved:Destroy()
+	self.SessionCreated:Destroy()
+	self.SessionEnded:Destroy()
+	self.SessionLocked:Destroy()
+	self.SessionUnlocked:Destroy()
 	self.CoinsChanged:Destroy()
 	self.XPChanged:Destroy()
 	self.LevelChanged:Destroy()

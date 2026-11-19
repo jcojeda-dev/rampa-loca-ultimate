@@ -11,9 +11,15 @@ RewardService.__index = RewardService
 
 type RewardServiceInstance = {
 	Name: string,
+	_economyService: any,
 	Init: (self: RewardServiceInstance) -> (),
 	Start: (self: RewardServiceInstance) -> (),
 	Destroy: (self: RewardServiceInstance) -> (),
+	SetEconomyService: (self: RewardServiceInstance, economyService: any) -> (),
+	AwardKill: (self: RewardServiceInstance, profile: PlayerTypes.ProfileData) -> (),
+	AwardHeadshot: (self: RewardServiceInstance, profile: PlayerTypes.ProfileData) -> (),
+	AwardParticipation: (self: RewardServiceInstance, profile: PlayerTypes.ProfileData) -> (),
+	AwardVictory: (self: RewardServiceInstance, profile: PlayerTypes.ProfileData, gameMode: string) -> (),
 	GetKillReward: (self: RewardServiceInstance) -> number,
 	GetHeadshotReward: (self: RewardServiceInstance) -> number,
 	GetParticipationReward: (self: RewardServiceInstance) -> number,
@@ -42,6 +48,43 @@ end
 
 function RewardService:Destroy(): ()
 	Logger:Info("Destroying RewardService")
+end
+
+function RewardService:SetEconomyService(economyService: any): ()
+	self._economyService = economyService
+end
+
+function RewardService:_ApplyReward(profile: PlayerTypes.ProfileData, coins: number, xp: number, reason: string): ()
+	assert(self._economyService ~= nil, "EconomyService must be configured")
+	self._economyService:AddCoins(profile, coins, reason)
+	self._economyService:AddXP(profile, xp, reason)
+	self._economyService:CheckLevelUp(profile)
+end
+
+function RewardService:AwardKill(profile: PlayerTypes.ProfileData): ()
+	assert(profile ~= nil, "Profile cannot be nil")
+	profile.Stats.Kills += 1
+	profile.Statistics.Kills = profile.Stats.Kills
+	self:_ApplyReward(profile, self:GetKillReward(), self:GetKillXP(), "KillReward")
+end
+
+function RewardService:AwardHeadshot(profile: PlayerTypes.ProfileData): ()
+	assert(profile ~= nil, "Profile cannot be nil")
+	profile.Stats.Headshots += 1
+	profile.Statistics.Headshots = profile.Stats.Headshots
+	self:_ApplyReward(profile, self:GetHeadshotReward(), self:GetHeadshotXP(), "HeadshotReward")
+end
+
+function RewardService:AwardParticipation(profile: PlayerTypes.ProfileData): ()
+	assert(profile ~= nil, "Profile cannot be nil")
+	self:_ApplyReward(profile, self:GetParticipationReward(), self:GetParticipationXP(), "ParticipationReward")
+end
+
+function RewardService:AwardVictory(profile: PlayerTypes.ProfileData, gameMode: string): ()
+	assert(profile ~= nil, "Profile cannot be nil")
+	assert(type(gameMode) == "string" and gameMode ~= "", "Game mode must be a non-empty string")
+	local coins = self:GetVictoryReward(gameMode)
+	self:_ApplyReward(profile, coins, self:GetVictoryXP(), "VictoryReward")
 end
 
 function RewardService:GetKillReward(): number

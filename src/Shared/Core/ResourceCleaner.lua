@@ -46,10 +46,10 @@ end
 function ResourceCleaner:Cleanup(): ()
 	for index = #self._items, 1, -1 do
 		local item = self._items[index]
-		if item and type(item) == "table" and type(item.Destroy) == "function" then
-			item:Destroy()
-		elseif item and typeof(item) == "Instance" then
-			item:Destroy()
+		if item ~= nil then
+			pcall(function()
+				item:Destroy()
+			end)
 		end
 		table.remove(self._items, index)
 	end

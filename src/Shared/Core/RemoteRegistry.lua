@@ -39,6 +39,12 @@ function RemoteRegistry:RegisterEvent(name: string): RemoteEvent
 		return existing
 	end
 
+	local found = self._folder:FindFirstChild(name)
+	if found ~= nil and found:IsA("RemoteEvent") then
+		self._events[name] = found
+		return found
+	end
+
 	local remoteEvent = Instance.new("RemoteEvent")
 	remoteEvent.Name = name
 	remoteEvent.Parent = self._folder
@@ -53,6 +59,12 @@ function RemoteRegistry:RegisterFunction(name: string): RemoteFunction
 		return existing
 	end
 
+	local found = self._folder:FindFirstChild(name)
+	if found ~= nil and found:IsA("RemoteFunction") then
+		self._functions[name] = found
+		return found
+	end
+
 	local remoteFunction = Instance.new("RemoteFunction")
 	remoteFunction.Name = name
 	remoteFunction.Parent = self._folder
@@ -61,11 +73,33 @@ function RemoteRegistry:RegisterFunction(name: string): RemoteFunction
 end
 
 function RemoteRegistry:GetEvent(name: string): RemoteEvent?
-	return self._events[name]
+	local event = self._events[name]
+	if event ~= nil then
+		return event
+	end
+
+	local found = self._folder:FindFirstChild(name)
+	if found ~= nil and found:IsA("RemoteEvent") then
+		self._events[name] = found
+		return found
+	end
+
+	return nil
 end
 
 function RemoteRegistry:GetFunction(name: string): RemoteFunction?
-	return self._functions[name]
+	local fn = self._functions[name]
+	if fn ~= nil then
+		return fn
+	end
+
+	local found = self._folder:FindFirstChild(name)
+	if found ~= nil and found:IsA("RemoteFunction") then
+		self._functions[name] = found
+		return found
+	end
+
+	return nil
 end
 
 function RemoteRegistry:Destroy(): ()

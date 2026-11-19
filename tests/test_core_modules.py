@@ -23,6 +23,19 @@ def test_core_modules_exist() -> None:
         "src/Shared/Constants/GameConstants.lua",
         "src/Shared/Types/Types.lua",
         "src/Shared/Utilities/Utilities.lua",
+        "src/Shared/Events/HUDEvents.lua",
+        "src/Server/Services/HUDService.lua",
+        "src/client/Controllers/HUDController.lua",
+        "src/client/Controllers/CrosshairController.lua",
+        "src/client/Controllers/HitMarkerController.lua",
+        "src/client/Controllers/KillFeedController.lua",
+        "src/client/Controllers/MatchHUDController.lua",
+        "src/client/Controllers/LobbyController.lua",
+        "src/client/Controllers/QueueController.lua",
+        "src/client/Controllers/TeamSelectionController.lua",
+        "src/client/Controllers/MainMenuController.lua",
+        "src/Shared/Enums/GameMode.lua",
+        "src/Shared/Enums/MatchResult.lua",
     ]
 
     for relative_path in required_files:

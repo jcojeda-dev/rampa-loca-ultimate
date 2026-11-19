@@ -4,9 +4,11 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local DataStoreService = game:GetService("DataStoreService")
 
 local PlayerTypes = require(ReplicatedStorage.Shared.Domains.Player.PlayerTypes)
-local ProfileTemplate = require(ReplicatedStorage.Shared.Domains.Player.ProfileTemplate)
+local PlayerProfile = require(ReplicatedStorage.Shared.Domains.Player.PlayerProfile)
 local ProfileSerializer = require(ReplicatedStorage.Shared.Domains.Player.ProfileSerializer)
 local ProfileValidator = require(ReplicatedStorage.Shared.Domains.Player.ProfileValidator)
+local ProfileTemplate = require(ReplicatedStorage.Shared.Domains.Player.ProfileTemplate)
+local Logger = require(ReplicatedStorage.Shared.Core.Logger)
 
 local ProfileRepository = {}
 ProfileRepository.__index = ProfileRepository
@@ -20,6 +22,10 @@ type RepositoryInstance = {
 	Destroy: (self: RepositoryInstance) -> (),
 }
 
+local function buildStoreKey(userId: number): string
+	return tostring(userId)
+end
+
 function ProfileRepository.new(): RepositoryInstance
 	local self = setmetatable({
 		_store = DataStoreService:GetDataStore("PlayerProfiles_V1"),
@@ -30,60 +36,79 @@ function ProfileRepository.new(): RepositoryInstance
 	return self
 end
 
-function ProfileRepository:Load(userId: number): PlayerTypes.ProfileData?
-	assert(type(userId) == "number" and userId > 0, "Invalid userId")
-
-	local success, data = pcall(function()
-		return self._store:GetAsync(userId)
-	end)
-
-	if not success then
-		return nil
-	end
-
-	if data == nil then
-		local newProfile = ProfileTemplate.Create(userId)
-		self:Save(newProfile)
-		return newProfile
-	end
-
-	if type(data) == "string" then
-		data = self._serializer:Deserialize(data)
-	end
-
-	if type(data) == "table" then
-		local isValid, _ = self._validator:ValidateProfile(data)
-		if isValid then
-			return self._validator:Sanitize(data)
-		end
-	end
-
-	return ProfileTemplate.Create(userId)
-end
-
-function ProfileRepository:Save(profile: PlayerTypes.ProfileData): (boolean, string?)
-	assert(profile ~= nil, "Profile cannot be nil")
-
-	local isValid, errorMsg = self._validator:ValidateProfile(profile)
-	if not isValid then
-		return false, errorMsg
-	end
-
+function ProfileRepository:_saveRaw(profile: PlayerTypes.ProfileData): (boolean, string?)
 	profile.LastModified = os.time()
 
 	local success, errorMessage = pcall(function()
-		self._store:SetAsync(profile.UserId, profile)
+		self._store:SetAsync(buildStoreKey(profile.UserId), self._serializer:Serialize(profile))
 	end)
 
 	if not success then
+		Logger:Warn(`Failed to save profile for user {profile.UserId}: {tostring(errorMessage)}`)
 		return false, tostring(errorMessage)
 	end
 
 	return true, nil
 end
 
+function ProfileRepository:Load(userId: number): PlayerTypes.ProfileData?
+	assert(type(userId) == "number" and userId > 0, "Invalid userId")
+
+	local success, rawData = pcall(function()
+		return self._store:GetAsync(buildStoreKey(userId))
+	end)
+
+	if not success then
+		Logger:Warn(`Failed to load profile for user {userId}`)
+		return ProfileTemplate.Create(userId)
+	end
+
+	if rawData == nil then
+		local profile = PlayerProfile.Create(userId)
+		self:_saveRaw(profile)
+		return profile
+	end
+
+	local profileData
+	if type(rawData) == "string" then
+		profileData = self._serializer:Deserialize(rawData)
+	elseif type(rawData) == "table" then
+		profileData = rawData
+	end
+
+	if type(profileData) ~= "table" then
+		Logger:Warn(`Invalid profile payload for user {userId}`)
+		local profile = PlayerProfile.Create(userId)
+		self:_saveRaw(profile)
+		return profile
+	end
+
+	local profile = PlayerProfile.Migrate(profileData)
+	local isValid, errorMsg = self._validator:ValidateProfile(profile)
+	if not isValid then
+		Logger:Warn(`Profile validation failed for user {userId}: {errorMsg}`)
+		profile = self._validator:Sanitize(profile)
+		self:_saveRaw(profile)
+	end
+
+	return profile
+end
+
+function ProfileRepository:Save(profile: PlayerTypes.ProfileData): (boolean, string?)
+	assert(profile ~= nil, "Profile cannot be nil")
+
+	local migratedProfile = PlayerProfile.Migrate(profile)
+	local isValid, errorMsg = self._validator:ValidateProfile(migratedProfile)
+	if not isValid then
+		Logger:Warn(`Profile validation failed for user {profile.UserId}: {errorMsg}`)
+		migratedProfile = self._validator:Sanitize(migratedProfile)
+	end
+
+	return self:_saveRaw(migratedProfile)
+end
+
 function ProfileRepository:Destroy(): ()
-	-- No cleanup needed for DataStore
+	-- No cleanup required for DataStore references
 end
 
 return ProfileRepository

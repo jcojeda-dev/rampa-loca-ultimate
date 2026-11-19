@@ -4,26 +4,32 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local PlayerTypes = require(ReplicatedStorage.Shared.Domains.Player.PlayerTypes)
 local EconomyConstants = require(ReplicatedStorage.Shared.Constants.EconomyConstants)
+local Utilities = require(ReplicatedStorage.Shared.Utilities.Utilities)
 
 local ProfileTemplate = {}
 
 function ProfileTemplate.Create(userId: number): PlayerTypes.ProfileData
-	return {
+	local now = os.time()
+	local baseStats = {
+		Kills = 0,
+		Deaths = 0,
+		Assists = 0,
+		Headshots = 0,
+		LongestKillStreak = 0,
+		Accuracy = 0,
+		Wins = 0,
+		Losses = 0,
+		PlayTime = 0,
+	}
+
+	local profile = {
 		UserId = userId,
 		Version = EconomyConstants.PROFILE_VERSION,
 		Coins = 0,
 		XP = 0,
 		Level = 1,
 		Rank = EconomyConstants.DefaultRank,
-		Stats = {
-			Kills = 0,
-			Deaths = 0,
-			Assists = 0,
-			Headshots = 0,
-			Wins = 0,
-			Losses = 0,
-			PlayTime = 0,
-		},
+		Stats = Utilities.DeepCopy(baseStats),
 		Inventory = {
 			Weapons = {},
 			Knives = {},
@@ -57,10 +63,13 @@ function ProfileTemplate.Create(userId: number): PlayerTypes.ProfileData
 		},
 		Missions = {},
 		Achievements = {},
-		CreatedAt = os.time(),
-		LastModified = os.time(),
-		LastLogin = os.time(),
+		CreatedAt = now,
+		LastModified = now,
+		LastLogin = now,
 	}
+
+	profile.Statistics = profile.Stats
+	return profile
 end
 
 return ProfileTemplate

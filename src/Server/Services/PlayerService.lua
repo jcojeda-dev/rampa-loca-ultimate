@@ -8,6 +8,7 @@ local PlayerTypes = require(ReplicatedStorage.Shared.Domains.Player.PlayerTypes)
 local ProfileCache = require(ReplicatedStorage.Shared.Domains.Player.ProfileCache)
 local SessionManager = require(ReplicatedStorage.Shared.Domains.Player.SessionManager)
 local AutoSaveManager = require(ReplicatedStorage.Shared.Domains.Player.AutoSaveManager)
+local PlayerProfile = require(ReplicatedStorage.Shared.Domains.Player.PlayerProfile)
 local PlayerSignals = require(ReplicatedStorage.Shared.Domains.Player.PlayerSignals)
 
 local PlayerService = {}
@@ -26,8 +27,11 @@ type PlayerServiceInstance = {
 	Destroy: (self: PlayerServiceInstance) -> (),
 	GetProfile: (self: PlayerServiceInstance, userId: number) -> PlayerTypes.ProfileData?,
 	SaveProfile: (self: PlayerServiceInstance, userId: number) -> (boolean, string?),
-	AddCoins: (self: PlayerServiceInstance, userId: number, amount: number, reason: string) -> (),
-	RemoveCoins: (self: PlayerServiceInstance, userId: number, amount: number, reason: string) -> boolean,
+	GetSession: (self: PlayerServiceInstance, userId: number) -> PlayerTypes.Session?,
+	UpdateSessionActivity: (self: PlayerServiceInstance, userId: number) -> (),
+	LockSession: (self: PlayerServiceInstance, userId: number) -> (),
+	UnlockSession: (self: PlayerServiceInstance, userId: number) -> (),
+	IsSessionActive: (self: PlayerServiceInstance, userId: number) -> boolean,
 	GetSignals: (self: PlayerServiceInstance) -> any,
 	SetDataService: (self: PlayerServiceInstance, dataService: any) -> (),
 	SetEconomyService: (self: PlayerServiceInstance, economyService: any) -> (),
@@ -102,6 +106,7 @@ function PlayerService:GetProfile(userId: number): PlayerTypes.ProfileData?
 
 	local profile = self._dataService:LoadProfile(userId)
 	if profile ~= nil then
+		profile = PlayerProfile.UpdateLastLogin(profile)
 		self._cache:Set(userId, profile)
 		self._autoSave:RegisterProfile(profile)
 		self._signals.ProfileLoaded:Fire(profile)
@@ -122,12 +127,41 @@ function PlayerService:SaveProfile(userId: number): (boolean, string?)
 		return false, "DataService not available"
 	end
 
+	profile = PlayerProfile.MarkModified(profile)
 	local success, errorMsg = self._dataService:SaveProfile(profile)
 	if success then
 		self._signals.ProfileSaved:Fire(profile)
 	end
 
 	return success, errorMsg
+end
+
+function PlayerService:GetSession(userId: number): PlayerTypes.Session?
+	return self._sessions:GetSession(userId)
+end
+
+function PlayerService:UpdateSessionActivity(userId: number): ()
+	self._sessions:UpdateActivity(userId)
+end
+
+function PlayerService:LockSession(userId: number): ()
+	self._sessions:LockSession(userId)
+	local session = self._sessions:GetSession(userId)
+	if session ~= nil then
+		self._signals.SessionLocked:Fire(session)
+	end
+end
+
+function PlayerService:UnlockSession(userId: number): ()
+	self._sessions:UnlockSession(userId)
+	local session = self._sessions:GetSession(userId)
+	if session ~= nil then
+		self._signals.SessionUnlocked:Fire(session)
+	end
+end
+
+function PlayerService:IsSessionActive(userId: number): boolean
+	return self._sessions:IsSessionActive(userId)
 end
 
 function PlayerService:AddCoins(userId: number, amount: number, reason: string): ()
@@ -175,7 +209,8 @@ end
 function PlayerService:_OnPlayerAdded(player: Player): ()
 	local profile = self:GetProfile(player.UserId)
 	if profile ~= nil then
-		self._sessions:CreateSession(player.UserId, player.UserId)
+		local session = self._sessions:CreateSession(player.UserId, player.UserId)
+		self._signals.SessionCreated:Fire(session)
 	end
 end
 
@@ -183,6 +218,11 @@ function PlayerService:_OnPlayerRemoving(player: Player): ()
 	local profile = self._cache:Get(player.UserId)
 	if profile ~= nil then
 		self:SaveProfile(player.UserId)
+	end
+
+	local session = self._sessions:GetSession(player.UserId)
+	if session ~= nil then
+		self._signals.SessionEnded:Fire(session)
 	end
 
 	self._cache:Remove(player.UserId)

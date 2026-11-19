@@ -16,6 +16,8 @@ type SessionManagerInstance = {
 	DestroySession: (self: SessionManagerInstance, userId: number) -> (),
 	IsSessionActive: (self: SessionManagerInstance, userId: number) -> boolean,
 	Cleanup: (self: SessionManagerInstance) -> (),
+	LockSession: (self: SessionManagerInstance, userId: number) -> (),
+	UnlockSession: (self: SessionManagerInstance, userId: number) -> (),
 	Destroy: (self: SessionManagerInstance) -> (),
 }
 
@@ -75,6 +77,20 @@ function SessionManager:Cleanup(): ()
 		if elapsed > EconomyConstants.SESSION_TIMEOUT then
 			self._sessions[userId] = nil
 		end
+	end
+end
+
+function SessionManager:LockSession(userId: number): ()
+	local session = self._sessions[userId]
+	if session ~= nil then
+		session.Locked = true
+	end
+end
+
+function SessionManager:UnlockSession(userId: number): ()
+	local session = self._sessions[userId]
+	if session ~= nil then
+		session.Locked = false
 	end
 end
 

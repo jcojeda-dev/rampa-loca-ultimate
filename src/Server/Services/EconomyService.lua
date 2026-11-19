@@ -18,9 +18,9 @@ type EconomyServiceInstance = {
 	RemoveCoins: (self: EconomyServiceInstance, profile: PlayerTypes.ProfileData, amount: number, reason: string) -> boolean,
 	SetCoins: (self: EconomyServiceInstance, profile: PlayerTypes.ProfileData, amount: number) -> (),
 	GetCoins: (self: EconomyServiceInstance, profile: PlayerTypes.ProfileData) -> number,
-	AddXP: (self: EconomyServiceInstance, profile: PlayerTypes.ProfileData, amount: number) -> (),
+	AddXP: (self: EconomyServiceInstance, profile: PlayerTypes.ProfileData, amount: number, reason: string?) -> (boolean),
 	CheckLevelUp: (self: EconomyServiceInstance, profile: PlayerTypes.ProfileData) -> boolean,
-	AwardReward: (self: EconomyServiceInstance, profile: PlayerTypes.ProfileData, rewardType: string, amount: number) -> (),
+	GetLevelXPRequirement: (self: EconomyServiceInstance, profile: PlayerTypes.ProfileData) -> number,
 }
 
 function EconomyService.new(): EconomyServiceInstance
@@ -76,30 +76,41 @@ function EconomyService:GetCoins(profile: PlayerTypes.ProfileData): number
 	return profile.Coins
 end
 
-function EconomyService:AddXP(profile: PlayerTypes.ProfileData, amount: number): ()
+function EconomyService:AddXP(profile: PlayerTypes.ProfileData, amount: number, reason: string?): (boolean)
 	assert(profile ~= nil, "Profile cannot be nil")
-	assert(type(amount) == "number" and amount >= 0, "Amount must be a positive number")
+	assert(type(amount) == "number" and amount >= 0, "Amount must be a non-negative number")
 
 	profile.XP = math.min(profile.XP + amount, EconomyConstants.MaxValues.XP)
+	Logger:Debug(`Added {amount} XP to player {profile.UserId} - Reason: {reason or "XP"}`)
+
+	return self:CheckLevelUp(profile)
+end
+
+function EconomyService:GetLevelXPRequirement(profile: PlayerTypes.ProfileData): number
+	assert(profile ~= nil, "Profile cannot be nil")
+	return 100 * profile.Level
 end
 
 function EconomyService:CheckLevelUp(profile: PlayerTypes.ProfileData): boolean
 	assert(profile ~= nil, "Profile cannot be nil")
 
-	local xpPerLevel = 100 * profile.Level
-	if profile.XP >= xpPerLevel then
-		profile.XP = profile.XP - xpPerLevel
-		profile.Level = math.min(profile.Level + 1, EconomyConstants.MaxValues.Level)
-		return true
+	local leveledUp = false
+	local requiredXP = self:GetLevelXPRequirement(profile)
+
+	while profile.XP >= requiredXP and profile.Level < EconomyConstants.MaxValues.Level do
+		profile.XP = profile.XP - requiredXP
+		profile.Level = profile.Level + 1
+		leveledUp = true
+		requiredXP = self:GetLevelXPRequirement(profile)
 	end
 
-	return false
+	return leveledUp
 end
 
 function EconomyService:AwardReward(profile: PlayerTypes.ProfileData, rewardType: string, amount: number): ()
 	assert(profile ~= nil, "Profile cannot be nil")
 	assert(type(rewardType) == "string", "Reward type must be a string")
-	assert(type(amount) == "number" and amount >= 0, "Amount must be a positive number")
+	assert(type(amount) == "number" and amount >= 0, "Amount must be a non-negative number")
 
 	self:AddCoins(profile, amount, rewardType)
 end

@@ -2,11 +2,11 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local PlayerTypes = require(ReplicatedStorage.Shared.Domains.Player.PlayerTypes)
+local PlayerProfile = require(ReplicatedStorage.Shared.Domains.Player.PlayerProfile)
 local ProfileRepository = require(ReplicatedStorage.Shared.Domains.Player.ProfileRepository)
-local ProfileTemplate = require(ReplicatedStorage.Shared.Domains.Player.ProfileTemplate)
 local ProfileValidator = require(ReplicatedStorage.Shared.Domains.Player.ProfileValidator)
 local Logger = require(ReplicatedStorage.Shared.Core.Logger)
-local PlayerTypes = require(ReplicatedStorage.Shared.Domains.Player.PlayerTypes)
 
 local DataService = {}
 DataService.__index = DataService
@@ -49,11 +49,12 @@ end
 function DataService:LoadProfile(userId: number): PlayerTypes.ProfileData?
 	assert(type(userId) == "number" and userId > 0, "Invalid userId")
 
-	local profile = self._repository:Load(userId)
-	if profile == nil then
+	local rawProfile = self._repository:Load(userId)
+	if rawProfile == nil then
 		return nil
 	end
 
+	local profile = PlayerProfile.Migrate(rawProfile)
 	local isValid, errorMsg = self._validator:ValidateProfile(profile)
 	if not isValid then
 		Logger:Warn(`Failed to validate profile for user {userId}: {errorMsg}`)
@@ -67,17 +68,18 @@ function DataService:SaveProfile(profile: PlayerTypes.ProfileData): (boolean, st
 	assert(profile ~= nil, "Profile cannot be nil")
 
 	local isValid, errorMsg = self._validator:ValidateProfile(profile)
+	local finalProfile = profile
 	if not isValid then
 		Logger:Warn(`Profile validation failed: {errorMsg}`)
-		profile = self._validator:Sanitize(profile)
+		finalProfile = self._validator:Sanitize(profile)
 	end
 
-	return self._repository:Save(profile)
+	return self._repository:Save(finalProfile)
 end
 
 function DataService:CreateProfile(userId: number): PlayerTypes.ProfileData
 	assert(type(userId) == "number" and userId > 0, "Invalid userId")
-	return ProfileTemplate.Create(userId)
+	return PlayerProfile.Create(userId)
 end
 
 return DataService
